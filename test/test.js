@@ -10,7 +10,7 @@ describe('plug.dj', function () {
     request('https://plug.dj/', (e, {}, body) => {
       if (e)
         throw e
-      if (body.indexOf('<title>Maintenance') !== -1)
+      if (body.indexOf('<title>maintenance') !== -1)
         throw new Error('plug.dj is currently in maintenance mode.')
       done()
     })
