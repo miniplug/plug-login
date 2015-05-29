@@ -41,4 +41,21 @@ describe('plug-login', function () {
     })
   })
 
+  it('returns a usable cookie jar', function (done) {
+    this.timeout(7000)
+    ok(exists(joinPath(__dirname, '../test.json')))
+    const args = require('../test.json')
+    login(args.email, args.password, (e, result) => {
+      if (e) throw e
+      eq(result.body.status, 'ok')
+      request('https://plug.dj/_/users/me'
+             , { json: true, jar: result.jar }
+             , (e, {}, body) => {
+               if (e) throw e
+               eq(result.body.data[0].id, body.data[0].id)
+               done()
+             })
+    })
+  })
+
 })
