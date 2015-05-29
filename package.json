@@ -1,0 +1,17 @@
+{ "name": "plug-login"
+, "description": "Logs in to plug.dj."
+, "version": "0.0.1"
+, "license": "MIT"
+, "keywords": [ "plug", "plug.dj", "login" ]
+, "main": "lib/index"
+, "repository": "goto-bus-stop/plug-login"
+, "bugs": "https://github.com/goto-bus-stop/plug-login/issues"
+, "author": "René Kooi <rene@kooi.me>"
+, "dependencies":
+  { "request": "2.x" }
+, "devDependencies":
+  { "babel": "5.x"
+  , "mocha": "2.x" }
+, "scripts":
+  { "babel": "./node_modules/.bin/babel --out-dir lib src"
+  , "test": "./node_modules/.bin/mocha --compilers js:babel/register" } }
