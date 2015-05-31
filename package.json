@@ -1,6 +1,6 @@
 { "name": "plug-login"
 , "description": "Logs in to plug.dj."
-, "version": "0.1.0"
+, "version": "0.1.1"
 , "license": "MIT"
 , "keywords": [ "plug", "plug.dj", "login" ]
 , "main": "lib/index"
