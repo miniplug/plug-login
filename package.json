@@ -13,5 +13,6 @@
   { "babel": "5.x"
   , "mocha": "2.x" }
 , "scripts":
-  { "babel": "./node_modules/.bin/babel --out-dir lib src"
+  { "prepublish": "npm run babel"
+  , "babel": "./node_modules/.bin/babel --out-dir lib src"
   , "test": "./node_modules/.bin/mocha --compilers js:babel/register" } }
