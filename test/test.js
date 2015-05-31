@@ -21,6 +21,9 @@ describe('plug.dj', function () {
 describe('plug-login', function () {
   this.timeout(5000)
 
+  ok(exists(joinPath(__dirname, '../test.json')))
+  const args = require('../test.json')
+
   const INVALID_EMAIL = 'invalid-email@invalid-domain.com'
   const INVALID_PASSWORD = 'not_the_password'
   it('cannot login with invalid credentials', done => {
@@ -32,8 +35,6 @@ describe('plug-login', function () {
   })
 
   it('can login with valid credentials', done => {
-    ok(exists(joinPath(__dirname, '../test.json')))
-    const args = require('../test.json')
     login(args.email, args.password, (e, result) => {
       if (e) throw e
       eq(result.body.status, 'ok')
@@ -43,8 +44,6 @@ describe('plug-login', function () {
 
   it('returns a usable cookie jar', function (done) {
     this.timeout(7000)
-    ok(exists(joinPath(__dirname, '../test.json')))
-    const args = require('../test.json')
     login(args.email, args.password, (e, result) => {
       if (e) throw e
       eq(result.body.status, 'ok')
@@ -55,6 +54,17 @@ describe('plug-login', function () {
                eq(result.body.data[0].id, body.data[0].id)
                done()
              })
+    })
+  })
+
+  it('can optionally retrieve an auth token', function (done) {
+    this.timeout(7000)
+
+    login(args.email, args.password, { authToken: true }, (e, result) => {
+      if (e) throw e
+      eq(result.body.status, 'ok')
+      eq(typeof result.token, 'string')
+      done()
     })
   })
 

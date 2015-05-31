@@ -23,21 +23,43 @@ function doLogin(opts, csrf, email, password, cb) {
   })
 }
 
-export default function login(email, password, rqOpts, cb = null) {
+function getAuthToken(jar, cb) {
+  request(
+    'https://plug.dj/_/auth/token'
+  , { jar, json: true }
+  , (e, {}, body) => {
+    if (e) cb(e)
+    else   cb(null, body.data[0])
+  })
+}
+
+// calls node-style async functions in sequence, passing
+// the results of all previous functions to every next one
+function sequence(functions, cb, values = []) {
+  if (functions.length === 0) return cb(null, values)
+  functions.shift()((e, value) => {
+    if (e) cb(e)
+    else   sequence(functions, cb, values.concat([ value ]))
+  }, values)
+}
+
+login.getAuthToken = getAuthToken
+
+export default function login(email, password, opts, cb = null) {
   if (!cb) {
-    [ cb, rqOpts ] = [ rqOpts, {} ]
+    [ cb, opts ] = [ opts, {} ]
   }
-  if (!rqOpts.jar) {
-    rqOpts.jar = request.jar()
+  if (!opts.jar) {
+    opts.jar = request.jar()
   }
 
-  getCsrf(rqOpts, (e, csrf) => {
+  sequence([
+    cb             => getCsrf(opts, cb),
+    (cb, [ csrf ]) => doLogin(opts, csrf, email, password, cb),
+    cb             => opts.authToken ? getAuthToken(opts.jar, cb) : cb(null)
+  ], (e, [, body, token = undefined ]) => {
     if (e) cb(e)
-    else {
-      doLogin(rqOpts, csrf, email, password, (e, body) => {
-        if (e) cb(e)
-        else   cb(null, { body, jar: rqOpts.jar })
-      })
-    }
+    else   cb(null, { body, token, jar: opts.jar })
   })
+
 }
