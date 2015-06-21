@@ -68,4 +68,13 @@ describe('plug-login', function () {
     })
   })
 
+  it('can retrieve auth tokens for guest users', function (done) {
+    this.timeout(5000)
+    login.guest({ authToken: true }, (e, result) => {
+      if (e) throw e
+      eq(typeof result.token, 'string')
+      done()
+    })
+  })
+
 })

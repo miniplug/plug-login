@@ -53,6 +53,16 @@ request('https://plug.dj/_/users/me', { json: true, jar: result.jar },
 let socket = require('plug-socket')(result.token)
 ```
 
+### plugLogin.guest(opts={}, cb)
+
+Gets a plug.dj session cookie and, optionally, WebSocket authentication token
+as a guest user.
+
+`opts` takes the same options as `plugLogin()`.
+
+`cb` is a node-style `(err, result)` callback. `result` is similar to what is
+returned by `plugLogin()`, minus the `body` property.
+
 ### plugLogin.getAuthToken(jar, cb)
 
 You can use the `getAuthToken` method separately, for example if you still have

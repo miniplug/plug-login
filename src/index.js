@@ -1,5 +1,9 @@
 import request from 'request'
 
+function error(status, message) {
+  return new Error(`${status}: ${message}`)
+}
+
 function getCsrf(opts, cb) {
   request('https://plug.dj/', opts, function (e, res, body) {
     if (e) cb(e)
@@ -28,8 +32,9 @@ function getAuthToken(jar, cb) {
     'https://plug.dj/_/auth/token'
   , { jar, json: true }
   , (e, {}, body) => {
-    if (e) cb(e)
-    else   cb(null, body.data[0])
+    if (e)                         cb(e)
+    else if (body.status !== 'ok') cb(error(body.status, body.data[0]))
+    else                           cb(null, body.data[0])
   })
 }
 
@@ -43,7 +48,25 @@ function sequence(functions, cb, values = []) {
   }, values)
 }
 
+function guest(opts, cb = null) {
+  if (!cb) {
+    [ cb, opts ] = [ opts, {} ]
+  }
+  if (!opts.jar) {
+    opts.jar = request.jar()
+  }
+
+  sequence([
+    cb => request('https://plug.dj/plug-socket-test', opts, cb),
+    cb => opts.authToken ? getAuthToken(opts.jar, cb) : cb(null)
+  ], (e, [, token = undefined ]) => {
+    if (e) cb(e)
+    else   cb(null, { token, jar: opts.jar })
+  })
+}
+
 login.getAuthToken = getAuthToken
+login.guest = guest
 
 export default function login(email, password, opts, cb = null) {
   if (!cb) {
