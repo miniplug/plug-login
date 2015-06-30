@@ -1,7 +1,9 @@
 import request from 'request'
 
 function error(status, message) {
-  return new Error(`${status}: ${message}`)
+  let e = new Error(`${status}: ${message}`)
+  e.status = status
+  return e
 }
 
 function getCsrf(opts, cb) {
