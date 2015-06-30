@@ -67,10 +67,7 @@ function guest(opts, cb = null) {
   })
 }
 
-login.getAuthToken = getAuthToken
-login.guest = guest
-
-export default function login(email, password, opts, cb = null) {
+function user(email, password, opts, cb = null) {
   if (!cb) {
     [ cb, opts ] = [ opts, {} ]
   }
@@ -86,5 +83,18 @@ export default function login(email, password, opts, cb = null) {
     if (e) cb(e)
     else   cb(null, { body, token, jar: opts.jar })
   })
+}
 
+login.getAuthToken = getAuthToken
+login.guest = guest
+login.user = user
+
+export default function login(email, password, opts, cb = null) {
+  if (typeof email === 'string') {
+    return user(email, password, opts, cb)
+  }
+  else {
+    [ opts, cb ] = [ email, password ]
+    return guest(opts, cb)
+  }
 }
