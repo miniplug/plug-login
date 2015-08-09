@@ -1,7 +1,5 @@
 import request from 'request'
 import { strictEqual as eq, ok } from 'assert'
-import { statSync as exists } from 'fs'
-import { join as joinPath } from 'path'
 import login from '../src'
 
 describe('plug.dj', function () {
@@ -19,10 +17,15 @@ describe('plug.dj', function () {
 })
 
 describe('plug-login', function () {
-  this.timeout(5000)
+  this.timeout(8000)
 
-  ok(exists(joinPath(__dirname, '../test.json')))
-  const args = require('../test.json')
+  ok(process.env.PLUG_LOGIN_NAME)
+  ok(process.env.PLUG_LOGIN_PASS)
+
+  const args = {
+    email: process.env.PLUG_LOGIN_NAME
+  , password: process.env.PLUG_LOGIN_PASS
+  }
 
   const INVALID_EMAIL = 'invalid-email@invalid-domain.com'
   const INVALID_PASSWORD = 'not_the_password'
