@@ -7,6 +7,13 @@ function error(status, message) {
 }
 
 function getCsrf(opts, cb) {
+  // for testing
+  if (opts._simulateMaintenance) {
+    setTimeout(() => {
+      cb(new Error('Could not find CSRF token'))
+    }, 300)
+    return
+  }
   request('https://plug.dj/', opts, function (e, res, body) {
     if (e) cb(e)
     else {
@@ -61,9 +68,9 @@ function guest(opts, cb = null) {
   sequence([
     cb => request('https://plug.dj/plug-socket-test', opts, cb),
     cb => opts.authToken ? getAuthToken(opts.jar, cb) : cb(null)
-  ], (e, [, token = undefined ]) => {
+  ], (e, results) => {
     if (e) cb(e)
-    else   cb(null, { token, jar: opts.jar })
+    else   cb(null, { token: results[1], jar: opts.jar })
   })
 }
 
@@ -79,9 +86,9 @@ function user(email, password, opts, cb = null) {
     cb             => getCsrf(opts, cb),
     (cb, [ csrf ]) => doLogin(opts, csrf, email, password, cb),
     cb             => opts.authToken ? getAuthToken(opts.jar, cb) : cb(null)
-  ], (e, [, body, token = undefined ]) => {
+  ], (e, results) => {
     if (e) cb(e)
-    else   cb(null, { body, token, jar: opts.jar })
+    else   cb(null, { body: results[1], token: results[2], jar: opts.jar })
   })
 }
 

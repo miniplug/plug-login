@@ -3,6 +3,7 @@ import { strictEqual as eq, ok } from 'assert'
 import login from '../src'
 
 describe('plug.dj', function () {
+  this.timeout(3000)
 
   it('is reachable', done => {
     request('https://plug.dj/', (e, {}, body) => {
@@ -19,8 +20,8 @@ describe('plug.dj', function () {
 describe('plug-login', function () {
   this.timeout(8000)
 
-  ok(process.env.PLUG_LOGIN_NAME)
-  ok(process.env.PLUG_LOGIN_PASS)
+  ok(process.env.PLUG_LOGIN_NAME, 'pass your test email in the PLUG_LOGIN_NAME env var')
+  ok(process.env.PLUG_LOGIN_PASS, 'pass your test password in the PLUG_LOGIN_PASS env var')
 
   const args = {
     email: process.env.PLUG_LOGIN_NAME
@@ -78,6 +79,17 @@ describe('plug-login', function () {
       eq(typeof result.token, 'string')
       done()
     })
+  })
+
+  // https://github.com/goto-bus-stop/plug-login/issues/1
+  it('passes errors nicely instead of blowing up', function (done) {
+    this.timeout(500)
+    login.user(args.email, args.password
+              , { _simulateMaintenance: true }
+              , (e, result) => {
+                ok(e)
+                done()
+              })
   })
 
 })
