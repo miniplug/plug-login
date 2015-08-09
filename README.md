@@ -27,7 +27,7 @@ plugLogin(
 )
 
 // "logging in" as a guest
-plugLogin({ authToken: true }, (err, result) => {
+plugLogin.guest({ authToken: true }, (err, result) => {
   if (err) throw err
   else     console.log(result.token)
 })
@@ -36,6 +36,7 @@ plugLogin({ authToken: true }, (err, result) => {
 ## API
 
 ### plugLogin(email, password, opts={}, cb)
+### plugLogin.user(email, password, opts={}, cb)
 
 Logs in to plug.dj using the given email address and password. You can
 optionally pass options in the third parameter.
@@ -65,6 +66,7 @@ This method is also available as `plugLogin.user`, with the same
 parameters.
 
 ### plugLogin(opts={}, cb)
+### plugLogin.guest(opts={}, cb)
 
 Gets a plug.dj session cookie and, optionally, WebSocket authentication token
 as a guest user.
