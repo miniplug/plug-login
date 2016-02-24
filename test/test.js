@@ -5,7 +5,7 @@ import login from '../src'
 const host = process.env.PLUG_LOGIN_HOST || 'https://plug.dj'
 
 describe('plug.dj', function () {
-  this.timeout(3000)
+  this.timeout(30000)
 
   it('is reachable', done => {
     request(host, (e, _, body) => {
@@ -20,7 +20,7 @@ describe('plug.dj', function () {
 })
 
 describe('plug-login', function () {
-  this.timeout(8000)
+  this.timeout(30000)
 
   ok(process.env.PLUG_LOGIN_NAME, 'pass your test email in the PLUG_LOGIN_NAME env var')
   ok(process.env.PLUG_LOGIN_PASS, 'pass your test password in the PLUG_LOGIN_PASS env var')
