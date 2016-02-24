@@ -1,5 +1,7 @@
 import request from 'request'
 
+const DEFAULT_HOST = 'https://plug.dj'
+
 function error(status, message) {
   let e = new Error(`${status}: ${message}`)
   e.status = status
@@ -14,7 +16,7 @@ function getCsrf(opts, cb) {
     }, 300)
     return
   }
-  request('https://plug.dj/', opts, function (e, res, body) {
+  request(opts.host, opts, function (e, res, body) {
     if (e) cb(e)
     else {
       let match = /csrf\s?=\s?"(.*?)"/.exec(body)
@@ -26,21 +28,27 @@ function getCsrf(opts, cb) {
 
 function doLogin(opts, csrf, email, password, cb) {
   request.post(
-    'https://plug.dj/_/auth/login'
+    `${opts.host}/_/auth/login`
   , { ...opts
     , json: true
     , body: { csrf, email, password } }
-  , (e, {}, body) => {
+  , (e, _, body) => {
     if (e) cb(e)
     else   cb(null, body)
   })
 }
 
-function getAuthToken(jar, cb) {
+function getAuthToken(opts, cb) {
+  if (!opts.jar) {
+    opts = normalizeOptions({ jar: opts })
+  } else {
+    opts = normalizeOptions(opts)
+  }
+
   request(
-    'https://plug.dj/_/auth/token'
-  , { jar, json: true }
-  , (e, {}, body) => {
+    `${opts.host}/_/auth/token`
+  , { ...opts, json: true }
+  , (e, _, body) => {
     if (e)                         cb(e)
     else if (body.status !== 'ok') cb(error(body.status, body.data[0]))
     else                           cb(null, body.data[0])
@@ -57,17 +65,30 @@ function sequence(functions, cb, values = []) {
   }, values)
 }
 
+function normalizeOptions(maybeOpts = {}) {
+  const opts = Object.create(maybeOpts)
+  if (!opts.jar) {
+    opts.jar = request.jar()
+  }
+  if (!opts.host) {
+    opts.host = DEFAULT_HOST
+  } else {
+    // Trim slashes
+    opts.host = opts.host.replace(/\/+$/, '')
+  }
+  return opts
+}
+
 function guest(opts, cb = null) {
   if (!cb) {
     [ cb, opts ] = [ opts, {} ]
   }
-  if (!opts.jar) {
-    opts.jar = request.jar()
-  }
+
+  opts = normalizeOptions(opts)
 
   sequence([
-    cb => request('https://plug.dj/plug-socket-test', opts, cb),
-    cb => opts.authToken ? getAuthToken(opts.jar, cb) : cb(null)
+    cb => request(`${opts.host}/plug-socket-test`, opts, cb),
+    cb => opts.authToken ? getAuthToken(opts, cb) : cb(null)
   ], (e, results) => {
     if (e) cb(e)
     else   cb(null, { token: results[1], jar: opts.jar })
@@ -78,14 +99,13 @@ function user(email, password, opts, cb = null) {
   if (!cb) {
     [ cb, opts ] = [ opts, {} ]
   }
-  if (!opts.jar) {
-    opts.jar = request.jar()
-  }
+
+  opts = normalizeOptions(opts)
 
   sequence([
     cb             => getCsrf(opts, cb),
     (cb, [ csrf ]) => doLogin(opts, csrf, email, password, cb),
-    cb             => opts.authToken ? getAuthToken(opts.jar, cb) : cb(null)
+    cb             => opts.authToken ? getAuthToken(opts, cb) : cb(null)
   ], (e, results) => {
     if (e) cb(e)
     else   cb(null, { body: results[1], token: results[2], jar: opts.jar })
@@ -99,8 +119,7 @@ login.user = user
 export default function login(email, password, opts, cb = null) {
   if (typeof email === 'string') {
     return user(email, password, opts, cb)
-  }
-  else {
+  } else {
     [ opts, cb ] = [ email, password ]
     return guest(opts, cb)
   }

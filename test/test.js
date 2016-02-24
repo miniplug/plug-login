@@ -2,11 +2,13 @@ import request from 'request'
 import { strictEqual as eq, ok } from 'assert'
 import login from '../src'
 
+const host = process.env.PLUG_LOGIN_HOST || 'https://plug.dj'
+
 describe('plug.dj', function () {
   this.timeout(3000)
 
   it('is reachable', done => {
-    request('https://plug.dj/', (e, {}, body) => {
+    request(host, (e, _, body) => {
       if (e)
         throw e
       if (body.indexOf('<title>maintenance') !== -1)
@@ -31,7 +33,7 @@ describe('plug-login', function () {
   const INVALID_EMAIL = 'invalid-email@invalid-domain.com'
   const INVALID_PASSWORD = 'not_the_password'
   it('cannot login with invalid credentials', done => {
-    login(INVALID_EMAIL, INVALID_PASSWORD, (e, result) => {
+    login(INVALID_EMAIL, INVALID_PASSWORD, { host }, (e, result) => {
       if (e) throw e
       eq(result.body.status, 'badLogin')
       done()
@@ -39,7 +41,7 @@ describe('plug-login', function () {
   })
 
   it('can login with valid credentials', done => {
-    login(args.email, args.password, (e, result) => {
+    login(args.email, args.password, { host }, (e, result) => {
       if (e) throw e
       eq(result.body.status, 'ok')
       done()
@@ -47,13 +49,12 @@ describe('plug-login', function () {
   })
 
   it('returns a usable cookie jar', function (done) {
-    this.timeout(7000)
-    login(args.email, args.password, (e, result) => {
+    login(args.email, args.password, { host }, (e, result) => {
       if (e) throw e
       eq(result.body.status, 'ok')
-      request('https://plug.dj/_/users/me'
+      request(`${host}/_/users/me`
              , { json: true, jar: result.jar }
-             , (e, {}, body) => {
+             , (e, _, body) => {
                if (e) throw e
                ok(body.data[0].id)
                done()
@@ -62,9 +63,7 @@ describe('plug-login', function () {
   })
 
   it('can optionally retrieve an auth token', function (done) {
-    this.timeout(7000)
-
-    login(args.email, args.password, { authToken: true }, (e, result) => {
+    login(args.email, args.password, { host, authToken: true }, (e, result) => {
       if (e) throw e
       eq(result.body.status, 'ok')
       eq(typeof result.token, 'string')
@@ -73,8 +72,7 @@ describe('plug-login', function () {
   })
 
   it('can retrieve auth tokens for guest users', function (done) {
-    this.timeout(5000)
-    login.guest({ authToken: true }, (e, result) => {
+    login.guest({ host, authToken: true }, (e, result) => {
       if (e) throw e
       eq(typeof result.token, 'string')
       done()
@@ -83,9 +81,8 @@ describe('plug-login', function () {
 
   // https://github.com/goto-bus-stop/plug-login/issues/1
   it('passes errors nicely instead of blowing up', function (done) {
-    this.timeout(500)
     login.user(args.email, args.password
-              , { _simulateMaintenance: true }
+              , { host, _simulateMaintenance: true }
               , (e, result) => {
                 ok(e)
                 done()
