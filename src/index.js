@@ -112,11 +112,7 @@ function user(email, password, opts, cb = null) {
   })
 }
 
-login.getAuthToken = getAuthToken
-login.guest = guest
-login.user = user
-
-export default function login(email, password, opts, cb = null) {
+function login(email, password, opts, cb = null) {
   if (typeof email === 'string') {
     return user(email, password, opts, cb)
   } else {
@@ -124,3 +120,16 @@ export default function login(email, password, opts, cb = null) {
     return guest(opts, cb)
   }
 }
+
+// Attempting to offer good support for both `require('plug-login')` and
+// `import { … } from 'plug-login'`:
+
+// for `import { login } from 'plug-login'`
+login.login = login
+// `import { getAuthToken, guest, user }` from 'plug-login'
+login.getAuthToken = getAuthToken
+login.guest = guest
+login.user = user
+
+// `import login from 'plug-login'`
+module.exports = login
