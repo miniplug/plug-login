@@ -66,7 +66,7 @@ function sequence(functions, cb, values = []) {
 }
 
 function normalizeOptions(maybeOpts = {}) {
-  const opts = Object.create(maybeOpts)
+  const opts = { ...maybeOpts }
   if (!opts.jar) {
     opts.jar = request.jar()
   }

@@ -16,7 +16,6 @@ describe('plug.dj', function () {
       done()
     })
   })
-
 })
 
 describe('plug-login', function () {
