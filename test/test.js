@@ -1,4 +1,4 @@
-/* global describe, it */
+/* global describe, it, before */
 import request from 'request'
 import { strictEqual as eq, ok } from 'assert'
 import login from '../src'
