@@ -29,19 +29,19 @@ describe('plug-login', function () {
   const INVALID_PASSWORD = 'not_the_password'
   it('cannot login with invalid credentials', () =>
     login(INVALID_EMAIL, INVALID_PASSWORD, { host }).then(fail, (result) => {
-      eq(result.response.body.status, 'badLogin')
+      ok(result)
     })
   )
 
   it('can login with valid credentials', () =>
     login(args.email, args.password, { host }).then((result) => {
-      eq(result.body.status, 'ok')
+      ok(result.session)
     })
   )
 
   it('returns a cookie string that can be used for authenticated requests', () =>
     login(args.email, args.password, { host }).then((result) => {
-      eq(result.body.status, 'ok')
+      ok(result.session)
       return got(`${host}/_/users/me`, {
         headers: { cookie: result.cookie },
         json: true
@@ -53,7 +53,7 @@ describe('plug-login', function () {
 
   it('can optionally retrieve an auth token', () =>
     login(args.email, args.password, { host, authToken: true }).then((result) => {
-      eq(result.body.status, 'ok')
+      ok(result.session)
       eq(typeof result.token, 'string')
     })
   )

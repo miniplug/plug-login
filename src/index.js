@@ -93,7 +93,7 @@ function getAuthToken (opts) {
     json: true
   })).then(({ body }) => {
     if (body.status !== 'ok') {
-     throw error(body.status, body.data[0])
+      throw error(body.status, body.data[0])
     }
     return body.data[0]
   })
