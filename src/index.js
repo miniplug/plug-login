@@ -1,88 +1,106 @@
-import request from 'request'
+import got from 'got'
+import { parse, serialize } from 'cookie'
+import props from 'promise-props'
 
 const DEFAULT_HOST = 'https://plug.dj'
 
+// Enhance a `got` options object to use a JSON body when sending data.
+function json (opts) {
+  return {
+    ...opts,
+    headers: {
+      ...opts.headers,
+      'content-type': 'application/json'
+    },
+    body: JSON.stringify(opts.body)
+  }
+}
+
+// Create an HTTP response error.
 function error (status, message) {
   let e = new Error(`${status}: ${message}`)
   e.status = status
   return e
 }
 
-function getCsrf (opts, cb) {
+// Extract the session cookie value from an array of set-cookie headers.
+function getSessionCookie (headers) {
+  for (let i = 0, l = headers.length; i < l; i++) {
+    const cookie = parse(headers[i])
+    if (cookie.session) return cookie.session
+  }
+}
+
+// Build a "Cookie:" header value with a session cookie.
+function makeSessionCookieHeader (session) {
+  return serialize('session', session, {
+    // Should not URL-encode: plug.dj only accepts unencoded "|" characters.
+    encode: value => value
+  })
+}
+
+function addCookieToHeaders (opts, session) {
+  if (!opts.headers || !opts.headers.cookie) {
+    opts.headers = Object.assign(opts.headers || {}, {
+      cookie: makeSessionCookieHeader(session)
+    })
+  }
+  return opts
+}
+
+// Get a CSRF token and session cookie for logging into plug.dj from their main
+// page.  Without the CSRF token, login requests will be rejected.
+function getCsrf (opts) {
   // for testing
   if (opts._simulateMaintenance) {
-    setTimeout(() => {
-      cb(new Error('Could not find CSRF token'))
-    }, 300)
-    return
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        reject(new Error('Could not find CSRF token'))
+      }, 300)
+    })
   }
-  request(opts.host, opts, (e, res, body) => {
-    if (e) {
-      cb(e)
-    } else {
-      let match = /csrf\s?=\s?"(.*?)"/.exec(body)
-      if (match[1]) {
-        cb(null, match[1])
-      } else {
-        cb(new Error('Could not find CSRF token'))
-      }
+
+  return got(opts.host, opts).then(({ body, headers }) => {
+    const match = /csrf\s?=\s?"(.*?)"/.exec(body)
+    if (!match[1]) {
+      throw new Error('Could not find CSRF token')
+    }
+    return {
+      csrf: match[1],
+      session: getSessionCookie(headers['set-cookie'])
     }
   })
 }
 
-function doLogin (opts, csrf, email, password, cb) {
-  request.post(`${opts.host}/_/auth/login`, {
+// Log in to plug.dj with an email address and password.
+// `opts` must contain headers with a session cookie.
+function doLogin (opts, csrf, email, password) {
+  return got.post(`${opts.host}/_/auth/login`, json({
     ...opts,
     json: true,
     body: { csrf, email, password }
-  }, (e, _, body) => {
-    if (e) {
-      cb(e)
-    } else {
-      cb(null, body)
-    }
-  })
+  })).then((res) => ({
+    session: getSessionCookie(res.headers['set-cookie']),
+    body: res.body
+  }))
 }
 
-function getAuthToken (opts, cb) {
-  if (!opts.jar) {
-    opts = normalizeOptions({ jar: opts })
-  } else {
-    opts = normalizeOptions(opts)
-  }
+function getAuthToken (opts) {
+  opts = normalizeOptions(opts)
 
-  request(`${opts.host}/_/auth/token`, {
+  return got(`${opts.host}/_/auth/token`, json({
     ...opts,
     json: true
-  }, (e, _, body) => {
-    if (e) {
-      cb(e)
-    } else if (body.status !== 'ok') {
-      cb(error(body.status, body.data[0]))
-    } else {
-      cb(null, body.data[0])
+  })).then(({ body }) => {
+    if (body.status !== 'ok') {
+     throw error(body.status, body.data[0])
     }
+    return body.data[0]
   })
-}
-
-// calls node-style async functions in sequence, passing
-// the results of all previous functions to every next one
-function sequence (functions, cb, values = []) {
-  if (functions.length === 0) return cb(null, values)
-  functions.shift()((e, value) => {
-    if (e) {
-      cb(e)
-    } else {
-      sequence(functions, cb, values.concat([ value ]))
-    }
-  }, values)
 }
 
 function normalizeOptions (maybeOpts = {}) {
   const opts = { ...maybeOpts }
-  if (!opts.jar) {
-    opts.jar = request.jar()
-  }
   if (!opts.host) {
     opts.host = DEFAULT_HOST
   } else {
@@ -92,51 +110,40 @@ function normalizeOptions (maybeOpts = {}) {
   return opts
 }
 
-function guest (opts, cb = null) {
-  if (!cb) {
-    [ cb, opts ] = [ opts, {} ]
-  }
-
+function guest (opts) {
   opts = normalizeOptions(opts)
 
-  sequence([
-    cb => request(`${opts.host}/plug-socket-test`, opts, cb),
-    cb => opts.authToken ? getAuthToken(opts, cb) : cb(null)
-  ], (e, results) => {
-    if (e) {
-      cb(e)
-    } else {
-      cb(null, { token: results[1], jar: opts.jar })
-    }
+  return got(`${opts.host}/plug-socket-test`, opts).then((res) => {
+    const session = getSessionCookie(res.headers['set-cookie'])
+    opts = addCookieToHeaders(opts, session)
+    return props({
+      session,
+      cookie: makeSessionCookieHeader(session),
+      token: opts.authToken ? getAuthToken(opts) : null
+    })
   })
 }
 
-function user (email, password, opts, cb = null) {
-  if (!cb) {
-    [ cb, opts ] = [ opts, {} ]
-  }
-
+function user (email, password, opts) {
   opts = normalizeOptions(opts)
 
-  sequence([
-    (cb) => getCsrf(opts, cb),
-    (cb, [ csrf ]) => doLogin(opts, csrf, email, password, cb),
-    (cb) => opts.authToken ? getAuthToken(opts, cb) : cb(null)
-  ], (e, results) => {
-    if (e) {
-      cb(e)
-    } else {
-      cb(null, { body: results[1], token: results[2], jar: opts.jar })
-    }
-  })
+  return getCsrf(opts)
+    .then(({ csrf, session }) => {
+      opts = addCookieToHeaders(opts, session)
+      return doLogin(opts, csrf, email, password)
+    })
+    .then((result) => props({
+      session: result.session,
+      cookie: makeSessionCookieHeader(result.session),
+      token: opts.authToken ? getAuthToken(opts) : null
+    }))
 }
 
-function login (email, password, opts, cb = null) {
+function login (email, password, opts) {
   if (typeof email === 'string') {
-    return user(email, password, opts, cb)
+    return user(email, password, opts)
   } else {
-    [ opts, cb ] = [ email, password ]
-    return guest(opts, cb)
+    return guest(email)
   }
 }
 
