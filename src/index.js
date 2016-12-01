@@ -1,6 +1,8 @@
-import got from 'got'
-import { parse, serialize } from 'cookie'
-import props from 'promise-props'
+'use strict'
+const got = require('got')
+const { parse, serialize } = require('cookie')
+const props = require('promise-props')
+const assign = require('object-assign')
 
 const DEFAULT_HOST = 'https://plug.dj'
 
@@ -41,7 +43,7 @@ function makeSessionCookieHeader (session) {
 
 function addCookieToHeaders (opts, session) {
   if (!opts.headers || !opts.headers.cookie) {
-    opts.headers = Object.assign(opts.headers || {}, {
+    opts.headers = assign(opts.headers || {}, {
       cookie: makeSessionCookieHeader(session)
     })
   }
