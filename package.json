@@ -11,7 +11,7 @@
   "main": "lib/index",
   "repository": "goto-bus-stop/plug-login",
   "bugs": "https://github.com/goto-bus-stop/plug-login/issues",
-  "author": "René Kooi <rene@kooi.me>",
+  "author": "Renée Kooi <renee@kooi.me>",
   "engines": {
     "node": ">= 4"
   },
