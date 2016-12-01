@@ -1,6 +1,7 @@
-import got from 'got'
-import { parse, serialize } from 'cookie'
-import props from 'promise-props'
+const got = require('got')
+const { parse, serialize } = require('cookie')
+const props = require('promise-props')
+const assign = require('object-assign') // eslint-disable-line no-unused-vars
 
 const DEFAULT_HOST = 'https://plug.dj'
 

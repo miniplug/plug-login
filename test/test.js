@@ -1,7 +1,7 @@
 /* global describe, it, before */
-import got from 'got'
-import { strictEqual as eq, fail, ok } from 'assert'
-import login from '../src'
+const got = require('got')
+const { strictEqual: eq, fail, ok } = require('assert')
+const login = require('../lib')
 
 const host = process.env.PLUG_LOGIN_HOST || 'https://plug.dj'
 
