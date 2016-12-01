@@ -29,6 +29,6 @@
   "scripts": {
     "prepublish": "npm run build",
     "build": "buble --output lib --target node:4 --objectAssign assign src",
-    "test": "npm run build && mocha --require buble/register && standard"
+    "test": "npm run build && mocha && standard"
   }
 }
