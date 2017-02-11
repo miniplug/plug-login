@@ -62,16 +62,11 @@ function getCsrf (opts) {
     })
   }
 
-  return got(opts.host, opts).then(({ body, headers }) => {
-    const match = /csrf\s?=\s?"(.*?)"/.exec(body)
-    if (!match[1]) {
-      throw new Error('Could not find CSRF token')
-    }
-    return {
-      csrf: match[1],
+  return got(`${opts.host}/_/mobile/init`, { json: true })
+    .then(({ body, headers }) => ({
+      csrf: body.data[0].c,
       session: getSessionCookie(headers['set-cookie'])
-    }
-  })
+    }))
 }
 
 // Log in to plug.dj with an email address and password.
