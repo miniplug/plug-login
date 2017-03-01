@@ -24,7 +24,7 @@
   "devDependencies": {
     "buble": "^0.15.0",
     "mocha": "^3.0.2",
-    "standard": "^8.0.0"
+    "standard": "^9.0.0"
   },
   "scripts": {
     "prepublish": "npm run build",
