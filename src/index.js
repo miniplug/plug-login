@@ -13,7 +13,8 @@ function json (opts) {
       ...opts.headers,
       'content-type': 'application/json'
     },
-    body: JSON.stringify(opts.body)
+    json: true,
+    body: opts.body
   }
 }
 
@@ -73,7 +74,6 @@ function getCsrf (opts) {
 function doLogin (opts, csrf, email, password) {
   return got.post(`${opts.host}/_/auth/login`, json({
     ...opts,
-    json: true,
     body: { csrf, email, password }
   })).then((res) => ({
     session: getSessionCookie(res.headers['set-cookie']),
@@ -84,10 +84,7 @@ function doLogin (opts, csrf, email, password) {
 function getAuthToken (opts) {
   opts = normalizeOptions(opts)
 
-  return got(`${opts.host}/_/auth/token`, json({
-    ...opts,
-    json: true
-  })).then(({ body }) => {
+  return got(`${opts.host}/_/auth/token`, json(opts)).then(({ body }) => {
     if (body.status !== 'ok') {
       throw error(body.status, body.data[0])
     }
