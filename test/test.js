@@ -47,9 +47,9 @@ describe('plug-login', function () {
       return got(`${host}/_/users/me`, {
         headers: { cookie: result.cookie },
         json: true
+      }).then((response) => {
+        assert.ok(response.body.data[0].id)
       })
-    }).then((response) => {
-      assert.ok(response.body.data[0].id)
     })
   )
 
