@@ -1,6 +1,8 @@
 plug-login
 ==========
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/goto-bus-stop/plug-login.svg)](https://greenkeeper.io/)
+
 Logs into plug.dj using a email address and password.
 
 [![Travis](https://img.shields.io/travis/goto-bus-stop/plug-login.svg?style=flat-square)](https://travis-ci.org/goto-bus-stop/plug-login) [![NPM](https://img.shields.io/npm/v/plug-login.svg?style=flat-square)](https://npmjs.com/package/plug-login)
