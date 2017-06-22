@@ -62,7 +62,7 @@ function getCsrf (opts) {
     })
   }
 
-  return got(`${opts.host}/_/mobile/init`, { json: true })
+  return got(`${opts.host}/_/mobile/init`, json(opts))
     .then(({ body, headers }) => ({
       csrf: body.data[0].c,
       session: getSessionCookie(headers['set-cookie'])
