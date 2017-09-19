@@ -19,8 +19,9 @@ function json (opts) {
 }
 
 // Create an HTTP response error.
-function error (status, message) {
+function error (response, status, message) {
   let e = new Error(`${status}: ${message}`)
+  e.response = response
   e.status = status
   return e
 }
@@ -84,9 +85,10 @@ function doLogin (opts, csrf, email, password) {
 function getAuthToken (opts) {
   opts = normalizeOptions(opts)
 
-  return got(`${opts.host}/_/auth/token`, json(opts)).then(({ body }) => {
+  return got(`${opts.host}/_/auth/token`, json(opts)).then((response) => {
+    const { body } = response
     if (body.status !== 'ok') {
-      throw error(body.status, body.data[0])
+      throw error(response, body.status, body.data[0])
     }
     return body.data[0]
   })
@@ -107,6 +109,9 @@ function guest (opts) {
   opts = normalizeOptions(opts)
 
   return got(`${opts.host}/plug-socket-test`, opts).then((res) => {
+    if (/<title>maintenance mode/.test(res.body)) {
+      throw error(res, 'maintenanceMode', 'The site is in maintenance mode')
+    }
     const session = getSessionCookie(res.headers['set-cookie'])
     opts = addCookieToHeaders(opts, session)
     return props({
