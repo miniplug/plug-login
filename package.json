@@ -22,7 +22,7 @@
   },
   "devDependencies": {
     "buble": "^0.16.0",
-    "mocha": "^3.0.2",
+    "mocha": "^4.0.0",
     "standard": "^10.0.0"
   },
   "scripts": {
