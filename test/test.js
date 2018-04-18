@@ -1,7 +1,7 @@
 /* global describe, it, before */
 'use strict'
 
-const got = require('got')
+const fetch = require('node-fetch')
 const assert = require('assert')
 const login = require('../lib')
 
@@ -12,11 +12,13 @@ describe('plug-login', function () {
 
   // Check that plug.dj is reachable.
   before(() =>
-    got(host).then((res) => {
-      if (res.body.indexOf('<title>maintenance') !== -1) {
-        throw new Error('plug.dj is currently in maintenance mode.')
-      }
-    })
+    fetch(host)
+      .then((response) => response.text())
+      .then((body) => {
+        if (body.indexOf('<title>maintenance') !== -1) {
+          throw new Error('plug.dj is currently in maintenance mode.')
+        }
+      })
   )
 
   assert.ok(process.env.PLUG_LOGIN_NAME, 'pass your test email in the PLUG_LOGIN_NAME env var')
@@ -44,11 +46,10 @@ describe('plug-login', function () {
   it('returns a cookie string that can be used for authenticated requests', () =>
     login(args.email, args.password, { host }).then((result) => {
       assert.ok(result.session)
-      return got(`${host}/_/users/me`, {
-        headers: { cookie: result.cookie },
-        json: true
-      }).then((response) => {
-        assert.ok(response.body.data[0].id)
+      return fetch(`${host}/_/users/me`, {
+        headers: { cookie: result.cookie }
+      }).then((response) => response.json()).then((body) => {
+        assert.ok(body.data[0].id)
       })
     })
   )
