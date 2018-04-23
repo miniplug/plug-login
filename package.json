@@ -2,20 +2,8 @@
   "name": "plug-login",
   "description": "Logs in to plug.dj.",
   "version": "1.2.0",
-  "license": "MIT",
-  "keywords": [
-    "plug",
-    "plug.dj",
-    "login"
-  ],
-  "main": "index.js",
-  "module": "index.es.js",
-  "repository": "goto-bus-stop/plug-login",
-  "bugs": "https://github.com/goto-bus-stop/plug-login/issues",
   "author": "Renée Kooi <renee@kooi.me>",
-  "engines": {
-    "node": ">= 4"
-  },
+  "bugs": "https://github.com/goto-bus-stop/plug-login/issues",
   "dependencies": {
     "cookie": "^0.3.1",
     "node-fetch": "^2.1.2",
@@ -28,9 +16,22 @@
     "rollup-plugin-buble": "^0.19.2",
     "standard": "^11.0.0"
   },
+  "engines": {
+    "node": ">= 4"
+  },
+  "homepage": "https://github.com/goto-bus-stop/plug-login",
+  "keywords": [
+    "login",
+    "plug",
+    "plug.dj"
+  ],
+  "license": "MIT",
+  "main": "index.js",
+  "module": "index.es.js",
+  "repository": "goto-bus-stop/plug-login",
   "scripts": {
-    "prepublish": "npm run build",
     "build": "rollup -c",
+    "prepublish": "npm run build",
     "test": "npm run build && mocha && standard"
   },
   "standard": {
