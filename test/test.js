@@ -3,7 +3,7 @@
 
 const fetch = require('node-fetch')
 const assert = require('assert')
-const login = require('../lib')
+const login = require('../')
 
 const host = process.env.PLUG_LOGIN_HOST || 'https://plug.dj'
 
