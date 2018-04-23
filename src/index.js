@@ -1,7 +1,6 @@
-'use strict'
-const fetch = require('node-fetch')
-const { parse, serialize } = require('cookie')
-const props = require('promise-props')
+import fetch from 'node-fetch'
+import { parse, serialize } from 'cookie'
+import props from 'promise-props'
 
 const DEFAULT_HOST = 'https://plug.dj'
 
@@ -149,7 +148,7 @@ function user (email, password, opts) {
     }))
 }
 
-function login (email, password, opts) {
+export default function login (email, password, opts) {
   if (typeof email === 'string') {
     return user(email, password, opts)
   } else {
@@ -157,15 +156,6 @@ function login (email, password, opts) {
   }
 }
 
-// Attempting to offer good support for both `require('plug-login')` and
-// `import { … } from 'plug-login'`:
-
-// for `import { login } from 'plug-login'`
-login.login = login
-// `import { getAuthToken, guest, user }` from 'plug-login'
-login.getAuthToken = getAuthToken
-login.guest = guest
 login.user = user
-
-// `import login from 'plug-login'`
-module.exports = login
+login.guest = guest
+login.getAuthToken = getAuthToken
