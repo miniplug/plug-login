@@ -1,11 +1,10 @@
-'use strict'
-const got = require('got')
-const { parse, serialize } = require('cookie')
-const props = require('promise-props')
+import fetch from 'node-fetch'
+import { parse, serialize } from 'cookie'
+import props from 'promise-props'
 
 const DEFAULT_HOST = 'https://plug.dj'
 
-// Enhance a `got` options object to use a JSON body when sending data.
+// Enhance a `fetch` options object to use a JSON body when sending data.
 function json (opts) {
   return {
     ...opts,
@@ -13,8 +12,7 @@ function json (opts) {
       ...opts.headers,
       'content-type': 'application/json'
     },
-    json: true,
-    body: opts.body
+    body: JSON.stringify(opts.body)
   }
 }
 
@@ -26,12 +24,21 @@ function error (response, status, message) {
   return e
 }
 
+// Get the JSON response from the plug.dj API, throwing if it is an error response.
+function getJSON (response) {
+  return response.json().then((body) => {
+    if (body.status !== 'ok') {
+      throw error(response, body.status, body.data[0])
+    }
+    return body
+  })
+}
+
 // Extract the session cookie value from an array of set-cookie headers.
 function getSessionCookie (headers) {
-  for (let i = 0, l = headers.length; i < l; i++) {
-    const cookie = parse(headers[i])
-    if (cookie.session) return cookie.session
-  }
+  if (!headers) return
+  const cookie = parse(headers)
+  if (cookie.session) return cookie.session
 }
 
 // Build a "Cookie:" header value with a session cookie.
@@ -63,35 +70,32 @@ function getCsrf (opts) {
     })
   }
 
-  return got(`${opts.host}/_/mobile/init`, json(opts))
-    .then(({ body, headers }) => ({
-      csrf: body.data[0].c,
-      session: getSessionCookie(headers['set-cookie'])
+  return fetch(`${opts.host}/_/mobile/init`, json(opts))
+    .then((response) => props({
+      csrf: getJSON(response).then((body) => body.data[0].c),
+      session: getSessionCookie(response.headers.get('set-cookie'))
     }))
 }
 
 // Log in to plug.dj with an email address and password.
 // `opts` must contain headers with a session cookie.
 function doLogin (opts, csrf, email, password) {
-  return got.post(`${opts.host}/_/auth/login`, json({
+  return fetch(`${opts.host}/_/auth/login`, json({
     ...opts,
+    method: 'post',
     body: { csrf, email, password }
-  })).then((res) => ({
-    session: getSessionCookie(res.headers['set-cookie']),
-    body: res.body
+  })).then((response) => props({
+    session: getSessionCookie(response.headers.get('set-cookie')),
+    body: getJSON(response)
   }))
 }
 
 function getAuthToken (opts) {
   opts = normalizeOptions(opts)
 
-  return got(`${opts.host}/_/auth/token`, json(opts)).then((response) => {
-    const { body } = response
-    if (body.status !== 'ok') {
-      throw error(response, body.status, body.data[0])
-    }
-    return body.data[0]
-  })
+  return fetch(`${opts.host}/_/auth/token`, json(opts))
+    .then((response) => getJSON(response))
+    .then((body) => body.data[0])
 }
 
 function normalizeOptions (maybeOpts = {}) {
@@ -108,16 +112,23 @@ function normalizeOptions (maybeOpts = {}) {
 function guest (opts) {
   opts = normalizeOptions(opts)
 
-  return got(`${opts.host}/plug-socket-test`, opts).then((res) => {
-    if (/<title>maintenance mode/.test(res.body)) {
-      throw error(res, 'maintenanceMode', 'The site is in maintenance mode')
+  return fetch(`${opts.host}/plug-socket-test`, opts).then((response) => {
+    if (!response.ok) {
+      throw error(response, response.status, response.statusText)
     }
-    const session = getSessionCookie(res.headers['set-cookie'])
-    opts = addCookieToHeaders(opts, session)
-    return props({
-      session,
-      cookie: makeSessionCookieHeader(session),
-      token: opts.authToken ? getAuthToken(opts) : null
+
+    return response.text().then((body) => {
+      if (/<title>maintenance mode/.test(body)) {
+        throw error(response, 'maintenanceMode', 'The site is in maintenance mode')
+      }
+
+      const session = getSessionCookie(response.headers.get('set-cookie'))
+      opts = addCookieToHeaders(opts, session)
+      return props({
+        session,
+        cookie: makeSessionCookieHeader(session),
+        token: opts.authToken ? getAuthToken(opts) : null
+      })
     })
   })
 }
@@ -137,7 +148,7 @@ function user (email, password, opts) {
     }))
 }
 
-function login (email, password, opts) {
+export default function login (email, password, opts) {
   if (typeof email === 'string') {
     return user(email, password, opts)
   } else {
@@ -145,15 +156,6 @@ function login (email, password, opts) {
   }
 }
 
-// Attempting to offer good support for both `require('plug-login')` and
-// `import { … } from 'plug-login'`:
-
-// for `import { login } from 'plug-login'`
-login.login = login
-// `import { getAuthToken, guest, user }` from 'plug-login'
-login.getAuthToken = getAuthToken
-login.guest = guest
 login.user = user
-
-// `import login from 'plug-login'`
-module.exports = login
+login.guest = guest
+login.getAuthToken = getAuthToken
