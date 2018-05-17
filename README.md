@@ -10,7 +10,7 @@ Logs into plug.dj using a email address and password.
 ```javascript
 const plugLogin = require('plug-login')
 
-await plugLogin('my-plug-email@example.com', 'hunter2')
+plugLogin('my-plug-email@example.com', 'hunter2')
   .then(rejoice)
   .catch(() => {
     // Login failed
