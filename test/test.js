@@ -67,7 +67,7 @@ describe('plug-login', function () {
     })
   )
 
-  // https://github.com/goto-bus-stop/plug-login/issues/1
+  // https://github.com/miniplug/plug-login/issues/1
   it('passes errors nicely instead of blowing up', () =>
     login.user(args.email, args.password, {
       host,
