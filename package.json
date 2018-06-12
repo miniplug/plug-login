@@ -1,7 +1,7 @@
 {
   "name": "plug-login",
   "description": "Logs in to plug.dj.",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "author": "Renée Kooi <renee@kooi.me>",
   "bugs": "https://github.com/miniplug/plug-login/issues",
   "dependencies": {
