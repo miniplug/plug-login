@@ -1,6 +1,7 @@
 language: node_js
-sudo: false
+os: linux
+dist: bionic
 node_js:
   - "stable"
-  - "8"
-  - "6"
+  - "12"
+  - "10"
