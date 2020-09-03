@@ -1,6 +1,6 @@
-import resolve from 'rollup-plugin-node-resolve'
-import commonjs from 'rollup-plugin-commonjs'
-import buble from 'rollup-plugin-buble'
+import resolve from '@rollup/plugin-node-resolve'
+import commonjs from '@rollup/plugin-commonjs'
+import buble from '@rollup/plugin-buble'
 import builtins from 'builtin-modules'
 
 const pkg = require('./package.json')
