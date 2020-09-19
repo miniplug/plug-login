@@ -4,4 +4,3 @@ dist: bionic
 node_js:
   - "stable"
   - "12"
-  - "10"

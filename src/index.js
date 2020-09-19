@@ -1,6 +1,8 @@
 import fetch from 'node-fetch'
-import { parse, serialize } from 'cookie'
+import cookie from 'cookie'
 import props from 'promise-props'
+
+const { parse, serialize } = cookie
 
 const DEFAULT_HOST = 'https://plug.dj'
 
@@ -18,10 +20,10 @@ function json (opts) {
 
 // Create an HTTP response error.
 function error (response, status, message) {
-  let e = new Error(`${status}: ${message}`)
-  e.response = response
-  e.status = status
-  return e
+  const err = new Error(`${status}: ${message}`)
+  err.response = response
+  err.status = status
+  return err
 }
 
 // Get the JSON response from the plug.dj API, throwing if it is an error response.
@@ -148,14 +150,4 @@ function user (email, password, opts) {
     }))
 }
 
-export default function login (email, password, opts) {
-  if (typeof email === 'string') {
-    return user(email, password, opts)
-  } else {
-    return guest(email)
-  }
-}
-
-login.user = user
-login.guest = guest
-login.getAuthToken = getAuthToken
+export { user, guest, getAuthToken }

@@ -21,6 +21,12 @@
   "engines": {
     "node": ">= 4"
   },
+  "exports": {
+    ".": {
+      "import": "./src/index.js",
+      "require": "./index.cjs"
+    }
+  },
   "homepage": "https://github.com/miniplug/plug-login",
   "keywords": [
     "login",
@@ -28,8 +34,8 @@
     "plug.dj"
   ],
   "license": "MIT",
-  "main": "index.js",
-  "module": "index.es.js",
+  "main": "./index.cjs",
+  "module": "./src/index.js",
   "repository": "miniplug/plug-login",
   "scripts": {
     "build": "rollup -c",
@@ -38,8 +44,8 @@
   },
   "standard": {
     "ignore": [
-      "index.js",
-      "index.es.js"
+      "index.cjs"
     ]
-  }
+  },
+  "type": "module"
 }

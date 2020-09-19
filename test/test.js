@@ -1,9 +1,7 @@
 /* global describe, it, before */
-'use strict'
-
-const fetch = require('node-fetch')
-const assert = require('assert')
-const login = require('../')
+import fetch from 'node-fetch'
+import assert from 'assert'
+import * as login from 'plug-login'
 
 const host = process.env.PLUG_LOGIN_HOST || 'https://plug.dj'
 
@@ -32,19 +30,19 @@ describe('plug-login', function () {
   const INVALID_EMAIL = 'invalid-email@invalid-domain.com'
   const INVALID_PASSWORD = 'not_the_password'
   it('cannot login with invalid credentials', () =>
-    login(INVALID_EMAIL, INVALID_PASSWORD, { host }).then(assert.fail, (result) => {
+    login.user(INVALID_EMAIL, INVALID_PASSWORD, { host }).then(assert.fail, (result) => {
       assert.ok(result)
     })
   )
 
   it('can login with valid credentials', () =>
-    login(args.email, args.password, { host }).then((result) => {
+    login.user(args.email, args.password, { host }).then((result) => {
       assert.ok(result.session)
     })
   )
 
   it('returns a cookie string that can be used for authenticated requests', () =>
-    login(args.email, args.password, { host }).then((result) => {
+    login.user(args.email, args.password, { host }).then((result) => {
       assert.ok(result.session)
       return fetch(`${host}/_/users/me`, {
         headers: { cookie: result.cookie }
@@ -55,7 +53,7 @@ describe('plug-login', function () {
   )
 
   it('can optionally retrieve an auth token', () =>
-    login(args.email, args.password, { host, authToken: true }).then((result) => {
+    login.user(args.email, args.password, { host, authToken: true }).then((result) => {
       assert.ok(result.session)
       assert.strictEqual(typeof result.token, 'string')
     })
